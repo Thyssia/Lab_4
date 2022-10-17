@@ -6,7 +6,7 @@
 
     <TextView
         android:padding="5dp"
-        android:id="@+id/textGoesHere"
+        android:id="@+id/textHere"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/textHere"

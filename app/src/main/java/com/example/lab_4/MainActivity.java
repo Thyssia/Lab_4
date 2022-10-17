@@ -2,6 +2,10 @@ package com.example.lab_4;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -19,6 +23,7 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<TODO> elements;
     private MyListAdapter myAdapter;
     TODO todo;
+    SQLiteDatabase db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,32 +36,47 @@ public class MainActivity extends AppCompatActivity {
 
         elements = new ArrayList<>();
 
-        addButton.setOnClickListener(click -> {
-            String listItem = editText.getText().toString();
+        loadDataFromDatabase();
 
+        addButton.setOnClickListener(click -> {
+            myAdapter.notifyDataSetChanged();
             todo = new TODO();
+            String listItem = editText.getText().toString();
             todo.setTodoText(listItem);
             todo.setUrgent(swUrgent.isChecked());
 
+            ContentValues newRowValues = new ContentValues();
+            newRowValues.put(MyOpener.COL_ITEMS, listItem);
+            newRowValues.put(String.valueOf(MyOpener.COL_URGENT), swUrgent.isChecked());
+            long newID = db.insert(MyOpener.TABLE_NAME, null, newRowValues);
+
+            todo = new TODO(listItem, newID, swUrgent.isChecked());
             elements.add(todo);
-            myAdapter.notifyDataSetChanged();
+
             editText.setText("");
             swUrgent.setChecked(false);
+            myAdapter.notifyDataSetChanged();
+
         });
 
         ListView myList = findViewById(R.id.myList);
         myList.setAdapter(myAdapter = new MyListAdapter());
 
+        myList.setOnItemClickListener((parent, view, pos, id) -> {
+//            elements.remove(pos);
+//            myAdapter.notifyDataSetChanged();
+        });
+
         myList.setOnItemLongClickListener((p, b, pos, id) -> {
             View newView = getLayoutInflater().inflate(R.layout.todo, null);
-            TextView tView = newView.findViewById(R.id.textGoesHere);
+            TextView tView = newView.findViewById(R.id.textHere);
 
             AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
 
-            tView.setText(elements.get(pos).getTodoText());
+           // tView.setText(elements.get(pos).getTodoText());
 
             alertDialogBuilder.setTitle("Do you want to delete this?")
-                    .setMessage("The selected row is: " + pos + "\n ")// + elements.get(pos).todoText)
+                    .setMessage("The selected row is: " + pos + "\n " + elements.get(pos).todoText)
 
                     .setPositiveButton("Yes", (click, arg) -> {
                         elements.remove(elements.get(pos));
@@ -67,6 +87,45 @@ public class MainActivity extends AppCompatActivity {
                     .create().show();
             return true;
         });
+    }
+
+    private void loadDataFromDatabase() {
+        MyOpener dbOpener = new MyOpener(this);
+        db = dbOpener.getWritableDatabase();
+
+        //        dbOpener.onCreate(db);
+
+        String[] columns = {MyOpener.COL_ID, MyOpener.COL_ITEMS, String.valueOf(MyOpener.COL_URGENT)};
+        Cursor results = db.query(false, MyOpener.TABLE_NAME, columns, null,
+                null, null, null, null, null);
+        //Cursor c = db.rawQuery("SELECT * from " + MyOpener.TABLE_NAME,null);
+        //int colIndex = c.getColumnIndex()
+
+
+        int nameColIndex = results.getColumnIndex(MyOpener.COL_ITEMS);
+        int idColIndex = results.getColumnIndex(MyOpener.COL_ID);
+        int urgentColIndex = results.getColumnIndex(String.valueOf(MyOpener.COL_URGENT));
+
+        while (results.moveToNext()) {
+            String name = results.getString(nameColIndex);
+            long id = results.getLong(idColIndex);
+            boolean urgent = (results.getInt(urgentColIndex) != 0);
+
+            elements.add(new TODO(name, id, urgent));
+        }
+    }
+
+    protected void updateContact(TODO c) {
+        ContentValues updatedValues = new ContentValues();
+        updatedValues.put(MyOpener.COL_ITEMS, c.getTodoText());
+
+        db.update(MyOpener.TABLE_NAME, updatedValues, MyOpener.COL_ID + "= ?",
+                new String[]{Long.toString(c.getId())});
+    }
+
+    protected void deleteContact(TODO c) {
+        db.delete(MyOpener.TABLE_NAME, MyOpener.COL_ID + "= ?",
+                new String[]{Long.toString(c.getId())});
     }
 
     private class MyListAdapter extends BaseAdapter {
@@ -88,8 +147,9 @@ public class MainActivity extends AppCompatActivity {
             if (newView == null) {
                 newView = inflater.inflate(R.layout.todo, parent, false);
             }
-            TextView tView = newView.findViewById(R.id.textGoesHere);
+            TextView tView = newView.findViewById(R.id.textHere);
             tView.setText(getItem(position).todoText);
+
             if (getItem(position).isUrgent) {
                 tView.setBackgroundColor(Color.RED);
                 tView.setTextColor(Color.WHITE);
@@ -100,26 +160,5 @@ public class MainActivity extends AppCompatActivity {
             }
             return newView;
         }
-    }
-}
-class TODO {
-
-    String todoText;
-    boolean isUrgent;
-
-    public String getTodoText() {
-        return todoText;
-    }
-
-    public void setTodoText(String todoText) {
-        this.todoText = todoText;
-    }
-
-    public boolean isUrgent() {
-        return isUrgent;
-    }
-
-    public void setUrgent(boolean urgent) {
-        isUrgent = urgent;
     }
 }
