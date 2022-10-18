@@ -36,4 +36,5 @@ public class MyOpener extends SQLiteOpenHelper {
 
         onCreate(db);
     }
+
 }

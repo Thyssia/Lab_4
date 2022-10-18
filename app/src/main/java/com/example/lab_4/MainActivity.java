@@ -30,6 +30,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
         EditText editText = (EditText) findViewById(R.id.editText);
         Switch swUrgent = findViewById(R.id.switch2);
         Button addButton = findViewById(R.id.myButton);
@@ -60,10 +61,10 @@ public class MainActivity extends AppCompatActivity {
         ListView myList = findViewById(R.id.myList);
         myList.setAdapter(myAdapter = new MyListAdapter());
 
-        myList.setOnItemClickListener((parent, view, pos, id) -> {
+        //myList.setOnItemClickListener((parent, view, pos, id) -> {
 //            elements.remove(pos);
 //            myAdapter.notifyDataSetChanged();
-        });
+        //});
 
         myList.setOnItemLongClickListener((p, b, pos, id) -> {
             View newView = getLayoutInflater().inflate(R.layout.todo, null);
@@ -77,7 +78,9 @@ public class MainActivity extends AppCompatActivity {
                     .setMessage("The selected row is: " + pos + "\n " + elements.get(pos).todoText)
 
                     .setPositiveButton("Yes", (click, arg) -> {
-                        elements.remove(elements.get(pos));
+                        deleteTodo(elements.get(pos));
+                        elements.remove (elements.get(pos));
+
                         myAdapter.notifyDataSetChanged();
                     })
                     .setNegativeButton("No", (click, arg) -> { })
@@ -91,14 +94,14 @@ public class MainActivity extends AppCompatActivity {
         MyOpener dbOpener = new MyOpener(this);
         db = dbOpener.getWritableDatabase();
 
-        //        dbOpener.onCreate(db);
+        dbOpener.onCreate(db);
 
         String[] columns = {MyOpener.COL_ID, MyOpener.COL_ITEMS, MyOpener.COL_URGENT};
         Cursor results = db.query(false, MyOpener.TABLE_NAME, columns, null,
                 null, null, null, null, null);
 
-        //Cursor c = db.rawQuery("SELECT * from " + MyOpener.TABLE_NAME,null);
-        //int colIndex = c.getColumnIndex()
+        Cursor c = db.rawQuery("SELECT * from " + MyOpener.TABLE_NAME,null);
+        //int colIndex = c.getColumnIndex();
 
         int nameColIndex = results.getColumnIndex(MyOpener.COL_ITEMS);
         int idColIndex = results.getColumnIndex(MyOpener.COL_ID);
@@ -119,11 +122,14 @@ public class MainActivity extends AppCompatActivity {
 
         db.update(MyOpener.TABLE_NAME, updatedValues, MyOpener.COL_ID + "= ?",
                 new String[]{Long.toString(c.getId())});
+        db.close();
     }
 
     protected void deleteTodo(TODO c) {
         db.delete(MyOpener.TABLE_NAME, MyOpener.COL_ID + "= ?",
                 new String[]{Long.toString(c.getId())});
+
+        db.close();
     }
 
     private class MyListAdapter extends BaseAdapter {
