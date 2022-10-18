@@ -1,5 +1,7 @@
 package com.example.lab_4;
 
+import android.database.sqlite.SQLiteDatabase;
+
 public class TODO {
 
     String todoText;
