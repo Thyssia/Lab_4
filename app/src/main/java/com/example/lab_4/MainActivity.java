@@ -40,14 +40,12 @@ public class MainActivity extends AppCompatActivity {
 
         addButton.setOnClickListener(click -> {
             myAdapter.notifyDataSetChanged();
-            todo = new TODO();
+
             String listItem = editText.getText().toString();
-            todo.setTodoText(listItem);
-            todo.setUrgent(swUrgent.isChecked());
 
             ContentValues newRowValues = new ContentValues();
             newRowValues.put(MyOpener.COL_ITEMS, listItem);
-            newRowValues.put(String.valueOf(MyOpener.COL_URGENT), swUrgent.isChecked());
+            newRowValues.put((MyOpener.COL_URGENT), swUrgent.isChecked());
             long newID = db.insert(MyOpener.TABLE_NAME, null, newRowValues);
 
             todo = new TODO(listItem, newID, swUrgent.isChecked());
@@ -73,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
 
             AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
 
-           // tView.setText(elements.get(pos).getTodoText());
+            tView.setText(elements.get(pos).getTodoText());
 
             alertDialogBuilder.setTitle("Do you want to delete this?")
                     .setMessage("The selected row is: " + pos + "\n " + elements.get(pos).todoText)
@@ -95,16 +93,16 @@ public class MainActivity extends AppCompatActivity {
 
         //        dbOpener.onCreate(db);
 
-        String[] columns = {MyOpener.COL_ID, MyOpener.COL_ITEMS, String.valueOf(MyOpener.COL_URGENT)};
+        String[] columns = {MyOpener.COL_ID, MyOpener.COL_ITEMS, MyOpener.COL_URGENT};
         Cursor results = db.query(false, MyOpener.TABLE_NAME, columns, null,
                 null, null, null, null, null);
+
         //Cursor c = db.rawQuery("SELECT * from " + MyOpener.TABLE_NAME,null);
         //int colIndex = c.getColumnIndex()
 
-
         int nameColIndex = results.getColumnIndex(MyOpener.COL_ITEMS);
         int idColIndex = results.getColumnIndex(MyOpener.COL_ID);
-        int urgentColIndex = results.getColumnIndex(String.valueOf(MyOpener.COL_URGENT));
+        int urgentColIndex = results.getColumnIndex(MyOpener.COL_URGENT);
 
         while (results.moveToNext()) {
             String name = results.getString(nameColIndex);
@@ -115,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    protected void updateContact(TODO c) {
+    protected void updateTodo(TODO c) {
         ContentValues updatedValues = new ContentValues();
         updatedValues.put(MyOpener.COL_ITEMS, c.getTodoText());
 
@@ -123,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
                 new String[]{Long.toString(c.getId())});
     }
 
-    protected void deleteContact(TODO c) {
+    protected void deleteTodo(TODO c) {
         db.delete(MyOpener.TABLE_NAME, MyOpener.COL_ID + "= ?",
                 new String[]{Long.toString(c.getId())});
     }

@@ -9,17 +9,16 @@ public class MyOpener extends SQLiteOpenHelper {
     public final static String TABLE_NAME = "ToDoList";
     public final static String COL_ITEMS = "Item";
     public final static String COL_ID = "ID";
-    public final static int COL_URGENT = 0;
+    public final static String COL_URGENT = "URGENT";
 
     public MyOpener(MainActivity ctx) { super(ctx, DATABASE_NAME, null, VERSION_NUM);}
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        String query = "CREATE TABLE " + TABLE_NAME +
-                " ( " +
-                COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+        String query = "CREATE TABLE IF NOT EXISTS " + TABLE_NAME + " ( " +
+                COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 COL_ITEMS + " TEXT," +
-                COL_URGENT + " INTEGER NOT NULL)";
+                COL_URGENT + " BOOLEAN)";
 
         db.execSQL(query);
     }
